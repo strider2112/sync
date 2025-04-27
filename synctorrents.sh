@@ -9,12 +9,15 @@ host="your_server_address"
 # Set use_key to "true"
 use_key=false
 ssh_key="/home/user/.ssh/key"
-eval "$(ssh-agent -s)"
-ssh-add "$ssh_key"
+
+if [ "$use_key" = true ]; then
+	eval "$(ssh-agent -s)"
+	ssh-add "$ssh_key"
+fi
 
 # Set args if key is used
 if [ "$use_key" = true ]; then
-	ssh_args="-p 22 -u $login, sftp://$host "ssh -a -x -i $ssh_key""
+	ssh_args="-p 22 -u $login, sftp://$host ssh -a -x -i $ssh_key"
 else
 	ssh_args="-p 22 -u $login,$pass sftp://$host"
 fi
@@ -35,7 +38,7 @@ else
 	touch synctorrent.lock
 	lftp "$ssh_args" << EOF
 	set mirror:use-pget-n 3
-	mirror -c -P5 --log=movies-sync.log --Remove-source-files $remote_finished $local_downloads
+	mirror -c -P5 --log-sync.log --Remove-source-files $remote_finished $local_downloads
 	quit
 EOF
 	# Set permissions for Sonarr / Radarr
