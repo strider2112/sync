@@ -1,14 +1,9 @@
 #!/bin/sh
 
-# Login details for remote server
-login="your_user"
-pass="your_password"
-host="your_server_address"
+# Get variables from synctorrents.conf
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. "$DIR"/synctorrents.conf
 
-# Use ssh_key for passwordless access
-# Set use_key to true
-use_key=false
-ssh_key="/home/user/.ssh/key"
 
 # Set args if key is used
 if [ "$use_key" = true ]; then	
@@ -16,12 +11,6 @@ if [ "$use_key" = true ]; then
 else
 	ssh_args=$(set sftp:connect-program "ssh -a -x")
 fi
-
-# Remote download finished location, use symlinks on remote server
-remote_finished="/remote/path/to/finished/"
-
-# Local location for downloads
-local_downloads="/local/path/for/downloads/"
 
 # If ltfp is not running, start the transfer
 if [ -e synctorrent.lock ]
