@@ -17,7 +17,7 @@ fi
 
 # Set args if key is used
 if [ "$use_key" = true ]; then	
-	ssh_args="set sftp:connect-program ssh -a -x -i $ssh_key"
+	ssh_args=$(set sftp:connect-program "ssh -a -x -i $ssh_key")
 else
 	ssh_args=""
 fi
