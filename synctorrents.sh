@@ -6,14 +6,9 @@ pass="your_password"
 host="your_server_address"
 
 # Use ssh_key for passwordless access
-# Set use_key to "true"
+# Set use_key to true
 use_key=false
 ssh_key="/home/user/.ssh/key"
-
-if [ "$use_key" = true ]; then
-	eval "$(ssh-agent -s)"
-	ssh-add "$ssh_key"
-fi
 
 # Set args if key is used
 if [ "$use_key" = true ]; then	
@@ -28,20 +23,26 @@ remote_finished="/remote/path/to/finished/"
 # Local location for downloads
 local_downloads="/local/path/for/downloads/"
 
-# Touch timestamp file to prevent deleting links that are created while rsync is running
-ssh $login@$host touch $remote_finished/.download-timestamp
-
 # If ltfp is not running, start the transfer
 if [ -e synctorrent.lock ]
 then
-	# Kill the ssh-agent
-	pkill ssh-agent
 	echo "Synctorrent is running already."
 	exit 1
 else
-	# Create file to track if lftp is running
+	# Start ssh-agent
+ 	if [ "$use_key" = true ]; then
+		eval "$(ssh-agent -s)"
+		ssh-add "$ssh_key"
+	fi
+
+ 	# Touch timestamp file to prevent deleting links that are created while rsync is running
+	ssh $login@$host touch $remote_finished/.download-timestamp
+
+ 	# Create file to track if lftp is running
 	touch synctorrent.lock
-	lftp -p 22 -u $login,$pass sftp://$host << EOF
+
+	# Run lftp
+ 	lftp -p 22 -u $login,$pass sftp://$host << EOF
  	$ssh_args
  	set mirror:use-pget-n 3
 	mirror -L -c -P5 --log=sync.log $remote_finished $local_downloads
