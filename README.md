@@ -39,7 +39,7 @@ local_downloads="/local/path/for/downloads/"
 ```sh
 use_perm=false
 own_perm="nobody:users"
-mod_perm="777"
+mod_perm="644"
 ```
 
 2: Set a cron job to run at desired frequency.
