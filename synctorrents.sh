@@ -16,10 +16,10 @@ if [ "$use_key" = true ]; then
 fi
 
 # Set args if key is used
-if [ "$use_key" = true ]; then
-	ssh_args="-p 22 -u $login, sftp://$host ssh -a -x -i $ssh_key"
+if [ "$use_key" = true ]; then	
+	ssh_args="set sftp:connect-program ssh -a -x -i $ssh_key"
 else
-	ssh_args="-p 22 -u $login,$pass sftp://$host"
+	ssh_args=""
 fi
 
 # Remote download finished location, use symlinks on remote server
@@ -36,9 +36,10 @@ then
 else
 	# Create file to track if lftp is running
 	touch synctorrent.lock
-	lftp "$ssh_args" << EOF
-	set mirror:use-pget-n 3
-	mirror -c -P5 --log-sync.log --Remove-source-files $remote_finished $local_downloads
+	lftp -p 22 -u $login,$pass sftp://$host << EOF
+ 	"$ssh_args"
+ 	set mirror:use-pget-n 3
+	mirror -c -P5 --log=sync.log --Remove-source-files $remote_finished $local_downloads
 	quit
 EOF
 	# Set permissions for Sonarr / Radarr
