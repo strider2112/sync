@@ -11,7 +11,7 @@ A simple script to download new content from your seedbox.  It will download con
 If you are on windows, that means you'll need something like [cygwin](http://cygwin.com/install.html) or [babun](http://babun.github.io/).
 
 ### How to use:
-1- Change script values by editing the fields in synctorrent.conf
+1: Change script values by editing the fields in synctorrent.conf
 
 If using SSH-KEY then leave pass="your_password" exactly as-is
 ```sh
@@ -42,4 +42,15 @@ own_perm="nobody:users"
 mod_perm="777"
 ```
 
-2- Set a cron job to run at desired frequency.
+2: Set a cron job to run at desired frequency.
+```sh
+~$ crontab -e
+```
+
+### Exit Codes
+```sh
+Exit 0 = Program completed successfully
+Exit 1 = Script already running when it was called again
+Exit 2 = Error in LFTP, script will print LFTP exit code into stdout
+Exit 3 = Error with remote deletion script, script will print ssh exit code into stdout
+```
