@@ -51,10 +51,12 @@ EOF
     		ssh $login@$host find $remote_finished \! -newer $remote_finished/.download-timestamp -type l -delete -print
 	fi
 	
- 	# Set permissions for Sonarr / Radarr
-	chown -R nobody:users "$local_downloads"
-	chmod -R 777 "$local_downloads"
-	
+if [ "$use_perm" = true ]; then
+   # Set permissions for folders
+   chown -R "$own_perm" "$local_downloads"
+   chmod -R "$mod_perm" "$local_downloads"
+fi
+
 	# Kill the ssh-agent
 	if [ "$use_key" = true ]; then
  		pkill ssh-agent
