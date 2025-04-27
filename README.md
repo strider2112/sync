@@ -35,4 +35,11 @@ remote_finished="/remote/path/to/finished/"
 local_downloads="/local/path/for/downloads/"
 ```
 
+(Optional) Configure the script to change permissions of local downloads folder, this may be required if you have another program or script that needs to access the files with another user/group. to use it, set use_perm to true and adjust the own and mod perm (chown and chmod syntax).
+```sh
+use_perm=false
+own_perm="nobody:users"
+mod_perm="777"
+```
+
 2- Set a cron job to run at desired frequency.
