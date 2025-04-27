@@ -44,18 +44,24 @@ EOF
 		if [ "$use_key" = true ]; then
   			pkill ssh-agent
      		fi
+		printf "LFTP failed. Exited with code %d \n" $?
        		rm -f synctorrent.lock
       		exit 2
 	else
     		printf "\n\nTransfer successful. Deleted following symbolic links:\n\n"
     		ssh $login@$host find $remote_finished \! -newer $remote_finished/.download-timestamp -type l -delete -print
+		if [ $? != 0 ]; then
+  			printf "Failed to run remote file delete command (line 51), exited with code %d \n" $?
+     			rm -f synctorrent.lock
+			exit 3
+     		fi
 	fi
 	
-if [ "$use_perm" = true ]; then
-   # Set permissions for folders
-   chown -R "$own_perm" "$local_downloads"
-   chmod -R "$mod_perm" "$local_downloads"
-fi
+	if [ "$use_perm" = true ]; then
+		# Set permissions for folders
+		chown -R "$own_perm" "$local_downloads"
+		chmod -R "$mod_perm" "$local_downloads"
+	fi
 
 	# Kill the ssh-agent
 	if [ "$use_key" = true ]; then
