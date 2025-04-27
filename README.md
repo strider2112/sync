@@ -1,11 +1,11 @@
 # LFTP seedbox sync script
 
-A simple script to download new media from your seedbox.  It will download content from the server (overwriting any local duplicates) and delete it from the server once the download is complete.
+A simple script to download new content from your seedbox.  It will download content from the server (overwriting any local duplicates) and delete it from the server once the download is complete.
 
 ### Requirements:
 - LFTP, an awesome command line FTP utility
-- A way to run bash scripts
-- Cron
+- A way to run bash scripts (/bin/bash on most Linux Distributions)
+- Cron for scheduled automation (default on most Linux Distributions
 - A little bit of setup
 
 If you are on windows, that means you'll need something like [cygwin](http://cygwin.com/install.html) or [babun](http://babun.github.io/).
