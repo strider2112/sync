@@ -44,7 +44,7 @@ EOF
 		if [ "$use_key" = true ]; then
   			pkill ssh-agent
      		fi
-		printf "LFTP failed. Exited with code %d \n" $?
+		printf "LFTP command failed (line 34). Exited with code %d \n" $?
        		rm -f synctorrent.lock
       		exit 2
 	else
