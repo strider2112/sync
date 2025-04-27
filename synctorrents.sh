@@ -1,74 +1,71 @@
-#!/bin/sh
-
+!/bin/sh
 # Get variables from synctorrents.conf
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . "$DIR"/synctorrents.conf
-
-
 # Set args if key is used
-if [ "$use_key" = true ]; then	
-	ssh_args=$(set sftp:connect-program "ssh -a -x -i $ssh_key")
+if [ "$use_key" = true ]; then
+        ssh_args=$(set sftp:connect-program "ssh -a -x -i $ssh_key")
 else
-	ssh_args=$(set sftp:connect-program "ssh -a -x")
+        ssh_args=$(set sftp:connect-program "ssh -a -x")
 fi
-
 # If ltfp is not running, start the transfer
 if [ -e synctorrent.lock ]
 then
-	echo "Synctorrent is running already."
-	exit 1
+        echo "Synctorrent is running already."
+        exit 1
 else
-	# Start ssh-agent
- 	if [ "$use_key" = true ]; then
-		eval "$(ssh-agent -s)"
-		ssh-add "$ssh_key"
-	fi
-
- 	# Touch timestamp file to prevent deleting links that are created while rsync is running
-	ssh $login@$host touch $remote_finished/.download-timestamp
-
- 	# Create file to track if lftp is running
-	touch synctorrent.lock
-
-	# Run lftp
- 	clear
- 	lftp -p 22 -u $login,$pass sftp://$host << EOF
- 	$ssh_args
- 	set mirror:use-pget-n 3
-	mirror -L -c -P5 --log=sync.log $remote_finished $local_downloads
-	quit
-EOF
-
-	# Check if lftp exited without error, if so, remove the symbolic links
-	if [ $? != 0 ]; then
-    		# Kill the ssh-agent
-		if [ "$use_key" = true ]; then
-  			pkill ssh-agent
-     		fi
-		printf "LFTP command failed (line 34). Exited with code %d \n" $?
-       		rm -f synctorrent.lock
-      		exit 2
-	else
-    		printf "\n\nTransfer successful. Deleted following symbolic links:\n\n"
-    		ssh $login@$host find $remote_finished \! -newer $remote_finished/.download-timestamp -type l -delete -print
-		if [ $? != 0 ]; then
-  			printf "Failed to run remote file delete command (line 51), exited with code %d \n" $?
-     			rm -f synctorrent.lock
-			exit 3
-     		fi
-	fi
-	
-	if [ "$use_perm" = true ]; then
-		# Set permissions for folders
-		chown -R "$own_perm" "$local_downloads"
-		chmod -R "$mod_perm" "$local_downloads"
-	fi
-
-	# Kill the ssh-agent
-	if [ "$use_key" = true ]; then
- 		pkill ssh-agent
-	fi
-
-	rm -f synctorrent.lock
-	exit 0
+        # Start ssh-agent
+        if [ "$use_key" = true ]; then
+                eval "$(ssh-agent -s)"
+                ssh-add "$ssh_key"
+        fi
+        # Touch timestamp file to prevent deleting links that are created while rsync is running
+        ssh $login@$host touch $remote_finished/.download-timestamp
+        # Create file to track if lftp is running
+        touch synctorrent.lock
+        # Run lftp
+        clear
+        let total=$(ssh $login@$host find -L $remote_finished | wc -l)-2
+        lftp -p 22 -u $login,$pass sftp://$host -e "$ssh_args;
+                set mirror:use-pget-n 3;
+                mirror -v -L -c -P5 --log=sync.log -e $remote_finished $local_downloads;
+                quit" |
+        while read word word2 filename
+        do    if [ "$word" = Transferring ]
+                then let count=count+1
+                let percent=count*100/total
+                echo -e "XXX\n$percent\nDownloading $filename\nXXX"
+        fi
+        done |
+        dialog --title "FTP Transfer" --gauge progress 10 60 0
+        clear
+        # Check if lftp exited without error, if so, remove the symbolic links
+        if [ $? != 0 ]; then
+                # Kill the ssh-agent
+                if [ "$use_key" = true ]; then
+                        pkill ssh-agent
+                fi
+                printf "Dialog command failed (line 48). Exited with code %d \n" $?
+                rm -f synctorrent.lock
+                exit 4
+        else
+                printf "\n\nTransfer successful. Deleted following symbolic links:\n\n"
+                ssh $login@$host find $remote_finished \! -newer $remote_finished/.download-timestamp -type l -delete -print
+                if [ $? != 0 ]; then
+                        printf "Failed to run remote file delete command (line 63), exited with code %d \n" $?
+                        rm -f synctorrent.lock
+                        exit 3
+                fi
+        fi
+        if [ "$use_perm" = true ]; then
+                # Set permissions for folders
+                chown -R "$own_perm" "$local_downloads"
+                chmod -R "$mod_perm" "$local_downloads"
+        fi
+        # Kill the ssh-agent
+        if [ "$use_key" = true ]; then
+                pkill ssh-agent
+        fi
+        rm -f synctorrent.lock
+        exit 0
 fi
