@@ -31,6 +31,7 @@ else
 	touch synctorrent.lock
 
 	# Run lftp
+ 	clear
  	lftp -p 22 -u $login,$pass sftp://$host << EOF
  	$ssh_args
  	set mirror:use-pget-n 3
