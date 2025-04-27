@@ -44,7 +44,7 @@ else
 	lftp -p 22 -u $login,$pass sftp://$host << EOF
  	$ssh_args
  	set mirror:use-pget-n 3
-	mirror -c -P5 --log=sync.log $remote_finished $local_downloads
+	mirror -L -c -P5 --log=sync.log $remote_finished $local_downloads
 	quit
 EOF
 
