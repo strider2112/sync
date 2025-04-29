@@ -13,7 +13,7 @@ If you are on windows, that means you'll need something like [cygwin](http://cyg
 ### How to use:
 1: Download the zip/repo and unpack it.
 
-2: Set the main script to run, ```sh chmod +x ./synctorrents.sh```
+2: Set the main script to run, $```chmod +x ./synctorrents.sh```
 
 3: Change script values by editing the fields in synctorrent.conf
 
@@ -58,9 +58,7 @@ logfolder="/path/to/ftplogs/"
 ```
 
 4: Set a cron job to run at desired frequency.
-```sh
-crontab -e
-```
+$```crontab -e```
 
 ### Exit Codes
 Exit 0 = Program completed successfully
