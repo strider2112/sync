@@ -4,9 +4,6 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . "$DIR"/synctorrents.conf
 
-# Download lock file location
-synclock="$logfolder""synctorrents.lock"
-
 # temporary log setup
 templog=$(mktemp -t templog.XXXX)
 templogfind=$(mktemp -t templogfind.XXXX)
@@ -50,9 +47,9 @@ else
 fi
 
 # If ltfp is not running, start the transfer
-if [ -e $synclock ]
+if pgrep -f "lftp" > /dev/null
 then
-        printf "\nSynctorrent is running already.\n" | tee -a $tempmail
+        printf "\nSynctorrent is running already. on process %d\n" $(pgrep -f "lftp") | tee -a $tempmail
         exit 1
 else
         # Start ssh-agent
@@ -63,10 +60,6 @@ else
 
         # Touch timestamp file to prevent deleting links that are created while rsync is running
         ssh $login@$host touch $remote_finished/.download-timestamp
-
-        # Create file to track if lftp is running
-        printf "\nCreating sync lock at location: %s\n" "$synclock" | tee -a $tempmail
-        touch $synclock
 
         # Run lftp
         let remaining=$(ssh $login@$host find -L $remote_finished -exec du -c --block-size=1MiB {} + | grep total$ | awk '{print $1}')
@@ -96,7 +89,6 @@ else
                         pkill ssh-agent
                 fi
                 printf "\nDialog command failed (line 48). Exited with code %d \n" $? | tee -a $tempmail
-                rm -f $synclock
                 exit 2
         else
 		clear
@@ -105,7 +97,6 @@ else
                 	ssh $login@$host find $remote_finished \! -newer $remote_finished/.download-timestamp -type l -delete -print >> $templogfind
                 	if [ $? != 0 ]; then
                         	printf "\nFailed to run remote file delete command (line 63), exited with code %d \n" $? | tee -a $tempmail
-                        	rm -f $synclock
                         	exit 3
                 	fi
 		fi
@@ -127,9 +118,6 @@ else
         if [ "$use_key" = true ]; then
                 pkill ssh-agent
         fi
-
-        printf "\nRemoving sync lock: %s\n" "$synclock" | tee -a $tempmail
-        rm -f $synclock
 
         # Add the symlink deletion results
         cat "$templogfind" >> $tempmail
