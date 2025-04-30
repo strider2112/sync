@@ -62,22 +62,27 @@ else
         ssh $login@$host touch $remote_finished/.download-timestamp
 
         # Run lftp
-        let remaining=$(ssh $login@$host find -L $remote_finished -exec du -c --block-size=1MiB {} + | grep total$ | awk '{print $1}')
-        let total=$(find $local_temp -exec du -c --block-size=1MiB {} + | grep total$ | awk '{print $1}')
+        let remaining=$(ssh $login@$host find -L $remote_finished -exec du -c --block-size=1M {} + | grep total$ | awk '{print $1}')
+        let total=$(find $local_temp -exec du -c --block-size=1M {} + | grep total$ | awk '{print $1}')
         let rfiles=$(ssh $login@$host find -L $remote_finished | wc -l)-2
         let lfiles=$(find $local_temp | wc -l)-2
 
-        unbuffer lftp -p 22 -u $login,$pass sftp://$host -e "$ssh_args;
-                set mirror:use-pget-n 5;
-                mirror -v -L -c -e $remote_finished $local_temp;
-                quit" |
+        script -q -c "$(cat <<- EOF
+		lftp -p 22 -u $login,$pass sftp://$host <<- EOFF
+		$ssh_args
+                set mirror:use-pget-n 5
+                mirror -v -L --exclude ".download-timestamp" -c -e $remote_finished $local_temp
+                quit
+		EOFF
+	EOF
+	)" |
 
 	while read word word2 progress
 	do
-                let lfiles=$(find $local_temp | wc -l)-3
-                total=$(find $local_temp -exec du -c --block-size=1MiB {} + | grep total$ | awk '{print $1}')
+                let lfiles=$(find $local_temp | wc -l)-2
+                total=$(find $local_temp -exec du -c --block-size=1M {} + | grep total$ | awk '{print $1}')
                 let percent=total*100/remaining
-                echo -e "XXX\n$percent\nDownloading $lfiles/$rfiles\n\n$word\n\n$progress\n\n$total MiB / $remaining MiB\nXXX"
+                echo -e "XXX\n$percent\nDownloading $lfiles/$rfiles\n\n$word\n\n$progress\n\n$total MB / $remaining MB\nXXX"
         done |
 
         dialog --title "FTP Transfer" --gauge progress 30 100 0
@@ -91,7 +96,6 @@ else
                 printf "\nDialog command failed (line 48). Exited with code %d \n" $? | tee -a $tempmail
                 exit 2
         else
-		clear
 		if [ "$src_del" = true ]; then
                 	printf "\n\nTransfer successful. Deleted following symbolic links:\n\n" >> $templogfind
                 	ssh $login@$host find $remote_finished \! -newer $remote_finished/.download-timestamp -type l -delete -print >> $templogfind
