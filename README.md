@@ -11,7 +11,11 @@ A simple script to download new content from your seedbox.  It will download con
 If you are on windows, that means you'll need something like [cygwin](http://cygwin.com/install.html) or [babun](http://babun.github.io/).
 
 ### How to use:
-1: Change script values by editing the fields in synctorrent.conf
+1: Download the zip/repo and unpack it.
+
+2: Set the main script to run, $```chmod +x ./synctorrents.sh```
+
+3: Change script values by editing the fields in synctorrent.conf
 
 If using SSH-KEY then leave pass="your_password" exactly as-is
 ```sh
@@ -31,7 +35,8 @@ Setup remote and local paths
 # Remote download finished location, use symlinks on remote server
 remote_finished="/remote/path/to/finished/"
 
-# Local location for downloads
+# Local location for downloads, temp is required to make sure no other scripts interfere with download
+local_temp="/local/path/to/temp/"
 local_downloads="/local/path/for/downloads/"
 ```
 
@@ -42,17 +47,25 @@ own_perm="nobody:users"
 mod_perm="644"
 ```
 
-2: Set a cron job to run at desired frequency.
+(Optional) Configure whether to delete remote files or not
 ```sh
-crontab -e
+del_src=false
 ```
+
+(Optional) Log folder location to store run logs
+```sh
+logfolder="/path/to/ftplogs/"
+```
+
+4: Set a cron job to run at desired frequency.
+$```crontab -e```
 
 ### Exit Codes
 Exit 0 = Program completed successfully
 
 Exit 1 = Script already running when it was called again
 
-Exit 2 = Error in LFTP, script will print LFTP exit code into stdout
+Exit 2 = Error in Dialog (progress bar), script will print Dialog exit code into stdout
 
 Exit 3 = Error with remote deletion script, script will print ssh exit code into stdout
 
