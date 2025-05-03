@@ -49,7 +49,7 @@ mod_perm="644"
 
 (Optional) Configure whether to delete remote files or not
 ```sh
-del_src=false
+src_del=false
 ```
 
 (Optional) Log folder location to store run logs
